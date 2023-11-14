@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c9c2ccdb-ae6b-433a-b832-79d6e3bd63f0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="error-handling-oecFlow" doc:id="7bf98a50-aa6e-4644-ac57-1902795f5651" >
+		<http:listener doc:name="Listener" doc:id="713f8816-9e2b-475b-8e29-859e065fb328" config-ref="HTTP_Listener_config" path="/EH"/>
+		<logger level="INFO" doc:name="Logger" doc:id="455e17e6-e2b9-46dd-bc77-e8c07ce4788e" message='#["FLOW STARTED SUCCESFULLY"]'/>
+		<flow-ref doc:name="Flow Reference" doc:id="0ea8d0c6-584e-4984-b87a-40d5cd4168be" name="PRIVATE-FLOW"/>
+		<logger level="INFO" doc:name="Logger" doc:id="99485e06-8e47-481a-aaf7-fbb13daa423e" message='#["END OF THE MAIN FLOW"]'/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e7cb3f0b-a4c3-4e07-ad72-7632cff3cb4b" type="ANY">
+				<logger level="INFO" doc:name="Logger" doc:id="25110260-9801-419d-9e58-10fcbd96c525" message="#[error.description]"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="PRIVATE-FLOW" doc:id="9c5f0984-c8ab-43b8-97f5-ade29b1f6e1b" >
+		<ee:transform doc:name="Transform Message" doc:id="54fcc852-09ba-4163-a957-95c4df03693a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"name": payload.firstname + payload.lastname
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cc7bf7f8-e87e-4fd0-8948-42f5f32d3083" type="EXPRESSION">
+				<logger level="INFO" doc:name="Logger" doc:id="3f621744-3e64-4335-9f99-b033592aeee6" message="#[error.description]"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
